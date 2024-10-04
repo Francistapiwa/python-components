@@ -8,36 +8,70 @@
 #
 
 import logging
-
 from apscheduler.schedulers.background import BackgroundScheduler
-
 import programmingtheiot.common.ConfigConst as ConfigConst
-
 from programmingtheiot.common.ConfigUtil import ConfigUtil
 from programmingtheiot.common.IDataMessageListener import IDataMessageListener
-
 from programmingtheiot.cda.system.SystemCpuUtilTask import SystemCpuUtilTask
 from programmingtheiot.cda.system.SystemMemUtilTask import SystemMemUtilTask
-
 from programmingtheiot.data.SystemPerformanceData import SystemPerformanceData
 
 class SystemPerformanceManager(object):
-	"""
-	Shell representation of class for student implementation.
-	
-	"""
+    """
+    Shell representation of class for student implementation.
+    """
 
-	def __init__(self):
-		pass
+    def __init__(self):
+        configUtil = ConfigUtil()
+        
+        # Get the poll rate from the configuration
+        self.pollRate = configUtil.getInteger(
+            section=ConfigConst.CONSTRAINED_DEVICE,
+            key=ConfigConst.POLL_CYCLES_KEY,
+            defaultVal=ConfigConst.DEFAULT_POLL_CYCLES
+        )
+        
+        # Get the location ID from the configuration
+        self.locationID = configUtil.getProperty(
+            section=ConfigConst.CONSTRAINED_DEVICE,
+            key=ConfigConst.DEVICE_LOCATION_ID_KEY,
+            defaultVal=ConfigConst.NOT_SET
+        )
+        
+        # Check if pollRate is valid
+        if self.pollRate <= 0:
+            self.pollRate = ConfigConst.DEFAULT_POLL_CYCLES
+        
+        self.dataMsgListener = None
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.add_job(self.handleTelemetry, 'interval', seconds=self.pollRate)
+        
+        self.cpuUtilTask = SystemCpuUtilTask()
+        self.memUtilTask = SystemMemUtilTask()
 
-	def handleTelemetry(self):
-		pass
-		
-	def setDataMessageListener(self, listener: IDataMessageListener) -> bool:
-		pass
-	
-	def startManager(self):
-		pass
-		
-	def stopManager(self):
-		pass
+    def handleTelemetry(self):
+        cpuUtilPct = self.cpuUtilTask.getTelemetryValue()
+        memUtilPct = self.memUtilTask.getTelemetryValue()
+        
+        logging.debug('CPU utilization is %s percent, and memory utilization is %s percent.', 
+                      str(cpuUtilPct), str(memUtilPct))
+
+    def setDataMessageListener(self, listener: IDataMessageListener) -> bool:
+        self.dataMsgListener = listener
+        return True  # You may want to implement further logic here
+
+    def startManager(self):
+        logging.info("Starting SystemPerformanceManager.")
+        if not self.scheduler.running:
+            self.scheduler.start()
+            logging.info("SystemPerformanceManager started.")
+        else:
+            logging.warning("SystemPerformanceManager scheduler already started. Ignoring.")
+
+    def stopManager(self):
+        logging.info("Stopping SystemPerformanceManager.")
+        try:
+            self.scheduler.shutdown()
+            logging.info("SystemPerformanceManager stopped.")
+        except Exception as e:
+            logging.warning("Error stopping SystemPerformanceManager scheduler: %s", str(e))

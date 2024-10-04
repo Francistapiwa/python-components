@@ -9,82 +9,53 @@
 
 import logging
 import unittest
-
+from programmingtheiot.cda.system.ActuatorAdapterManager import ActuatorAdapterManager
+from programmingtheiot.data.ActuatorData import ActuatorData
 import programmingtheiot.common.ConfigConst as ConfigConst
 
-from programmingtheiot.data.SystemPerformanceData import SystemPerformanceData
+class ActuatorAdapterManagerTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        logging.basicConfig(format='%(asctime)s:%(module)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+        logging.info("Testing ActuatorAdapterManager class...")
+        cls.actuatorAdapterMgr = ActuatorAdapterManager()
 
-class SystemPerformanceDataTest(unittest.TestCase):
-	"""
-	This test case class contains very basic unit tests for
-	SystemPerformanceData. It should not be considered complete,
-	but serve as a starting point for the student implementing
-	additional functionality within their Programming the IoT
-	environment.
-	"""
-	
-	DEFAULT_NAME = "SystemPerformanceDataFooBar"
-	DEFAULT_CPU_UTIL_DATA  = 10.0
-	DEFAULT_DISK_UTIL_DATA = 10.0
-	DEFAULT_MEM_UTIL_DATA  = 10.0
-	
-	@classmethod
-	def setUpClass(self):
-		logging.basicConfig(format = '%(asctime)s:%(module)s:%(levelname)s:%(message)s', level = logging.DEBUG)
-		logging.info("Testing SystemPerformanceData class...")
-		
-	def setUp(self):
-		pass
+    def testHumidifierOn(self):
+        data = ActuatorData()
+        data.setLocationID(self.actuatorAdapterMgr.locationID)
+        data.setTypeID(ConfigConst.HUMIDIFIER_ACTUATOR_TYPE)
+        data.setValue(1)  # Assume 1 means ON
 
-	def tearDown(self):
-		pass
-	
-	def testDefaultValues(self):
-		spd = SystemPerformanceData()
-		
-		self.assertEqual(spd.getName(), ConfigConst.SYSTEM_PERF_NAME)
-		self.assertEqual(spd.getStatusCode(), ConfigConst.DEFAULT_STATUS)
-		
-		self.assertEqual(spd.getCpuUtilization(), ConfigConst.DEFAULT_VAL)
-		self.assertEqual(spd.getMemoryUtilization(), ConfigConst.DEFAULT_VAL)
-		
-		logging.info("System perf data as string: " + str(spd))
+        response = self.actuatorAdapterMgr.sendActuatorCommand(data)
+        self.assertIsNotNone(response)
 
-	def testParameterUpdates(self):
-		spd = self._createTestSystemPerformanceData()
-		
-		self.assertEqual(spd.getName(), self.DEFAULT_NAME)
-		
-		self.assertEqual(spd.getCpuUtilization(), self.DEFAULT_CPU_UTIL_DATA)
-		self.assertEqual(spd.getMemoryUtilization(), self.DEFAULT_MEM_UTIL_DATA)
+    def testHumidifierOff(self):
+        data = ActuatorData()
+        data.setLocationID(self.actuatorAdapterMgr.locationID)
+        data.setTypeID(ConfigConst.HUMIDIFIER_ACTUATOR_TYPE)
+        data.setValue(0)  # Assume 0 means OFF
 
-	def testFullUpdate(self):
-		spd = SystemPerformanceData()
-		spd2 = self._createTestSystemPerformanceData()
-		
-		self.assertEqual(spd.getName(), ConfigConst.SYSTEM_PERF_NAME)
-		
-		self.assertEqual(spd.getCpuUtilization(), ConfigConst.DEFAULT_VAL)
-		self.assertEqual(spd.getMemoryUtilization(), ConfigConst.DEFAULT_VAL)
-		
-		spd.updateData(spd2)
-		
-		self.assertEqual(spd.getName(), self.DEFAULT_NAME)
-		
-		self.assertEqual(spd.getCpuUtilization(), self.DEFAULT_CPU_UTIL_DATA)
-		self.assertEqual(spd.getMemoryUtilization(), self.DEFAULT_MEM_UTIL_DATA)
-	
-	def _createTestSystemPerformanceData(self):
-		spd = SystemPerformanceData()
-		spd.setName(self.DEFAULT_NAME)
-		
-		spd.setCpuUtilization(self.DEFAULT_CPU_UTIL_DATA)
-		spd.setMemoryUtilization(self.DEFAULT_MEM_UTIL_DATA)
-		
-		logging.info("System perf data as string: " + str(spd))
-		
-		return spd
+        response = self.actuatorAdapterMgr.sendActuatorCommand(data)
+        self.assertIsNotNone(response)
+
+    def testHvacOn(self):
+        data = ActuatorData()
+        data.setLocationID(self.actuatorAdapterMgr.locationID)
+        data.setTypeID(ConfigConst.HVAC_ACTUATOR_TYPE)
+        data.setValue(1)  # Assume 1 means ON
+
+        response = self.actuatorAdapterMgr.sendActuatorCommand(data)
+        self.assertIsNotNone(response)
+
+    def testHvacOff(self):
+        data = ActuatorData()
+        data.setLocationID(self.actuatorAdapterMgr.locationID)
+        data.setTypeID(ConfigConst.HVAC_ACTUATOR_TYPE)
+        data.setValue(0)  # Assume 0 means OFF
+
+        response = self.actuatorAdapterMgr.sendActuatorCommand(data)
+        self.assertIsNotNone(response)
 
 if __name__ == "__main__":
-	unittest.main()
+    unittest.main()
 	
