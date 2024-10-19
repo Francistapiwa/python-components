@@ -13,8 +13,9 @@
 import logging
 from time import sleep
 
-# Make sure to import the SystemPerformanceManager class
-from programmingtheiot.cda.system.SystemPerformanceManager import SystemPerformanceManager
+from programmingtheiot.cda.app.DeviceDataManager import DeviceDataManager
+import programmingtheiot.common.ConfigConst as ConfigConst
+from programmingtheiot.common.ConfigUtil import ConfigUtil
 
 logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -28,16 +29,16 @@ class ConstrainedDeviceApp:
         Initialization of class.
         """
         logging.info("Initializing CDA...")
-
-        # Initialize the system performance manager
-        self.sysPerfMgr = SystemPerformanceManager()
+        
+        # Create an instance of DeviceDataManager
+        self.devDataMgr = DeviceDataManager()
 
     def startApp(self):
         """
         Start the CDA. Calls startManager() on the device data manager instance.
         """
         logging.info("Starting CDA...")
-        self.sysPerfMgr.startManager()
+        self.devDataMgr.startManager()  # Start the DeviceDataManager
         logging.info("CDA started.")
 
     def stopApp(self, code: int):
@@ -45,7 +46,7 @@ class ConstrainedDeviceApp:
         Stop the CDA. Calls stopManager() on the device data manager instance.
         """
         logging.info("CDA stopping...")
-        self.sysPerfMgr.stopManager()
+        self.devDataMgr.stopManager()  # Stop the DeviceDataManager
         logging.info("CDA stopped with exit code %s.", str(code))
 
     def parseArgs(self, args):
@@ -60,13 +61,19 @@ class ConstrainedDeviceApp:
 def main():
     """
     Main function definition for running client as application.
-    Current implementation runs for 65 seconds then exits.
     """
     cda = ConstrainedDeviceApp()
     cda.startApp()
     
-    # Run for 65 seconds - this can be changed as needed
-    sleep(65)
+    # Check if the app should run forever
+    runForever = ConfigUtil().getBoolean(ConfigConst.CONSTRAINED_DEVICE, ConfigConst.RUN_FOREVER_KEY)
+
+    if runForever:
+        while True:
+            sleep(5)
+    else:
+        # Run for 65 seconds or any other configurable duration
+        sleep(65)
     
     # Stop the app
     cda.stopApp(0)  # Provide a code for graceful exit

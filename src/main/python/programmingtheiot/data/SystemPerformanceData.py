@@ -1,48 +1,32 @@
-#####
-# 
-# This class is part of the Programming the Internet of Things project.
-# 
-# It is provided as a simple shell to guide the student and assist with
-# implementation for the Programming the Internet of Things exercises,
-# and designed to be modified by the student as needed.
-#
-
 import programmingtheiot.common.ConfigConst as ConfigConst
 from programmingtheiot.data.BaseIotData import BaseIotData
 
 class SystemPerformanceData(BaseIotData):
     """
-    Shell representation of class for student implementation.
+    Represents system performance data including CPU and memory utilization.
     """
-    DEFAULT_VAL = 0.0
     
     def __init__(self, d=None):
         super(SystemPerformanceData, self).__init__(name=ConfigConst.SYSTEM_PERF_MSG, typeID=ConfigConst.SYSTEM_PERF_TYPE, d=d)
-        self.cpuUtil = ConfigConst.DEFAULT_VAL
-        self.memUtil = ConfigConst.DEFAULT_VAL
+        self.cpu_util = ConfigConst.DEFAULT_VAL
+        self.mem_util = ConfigConst.DEFAULT_VAL
 
-    def getCpuUtilization(self):
-        return self.cpuUtil
+    def get_cpu_utilization(self):
+        return self.cpu_util
 
-    def getDiskUtilization(self):
-        pass  # Implement this method as needed
+    def get_memory_utilization(self):
+        return self.mem_util
 
-    def getMemoryUtilization(self):
-        return self.memUtil
-
-    def setCpuUtilization(self, cpuUtil):
-        self.cpuUtil = cpuUtil
+    def set_cpu_utilization(self, cpu_util: float):
+        self.cpu_util = cpu_util
         self.updateTimeStamp()
 
-    def setDiskUtilization(self, diskUtil):
-        pass  # Implement this method as needed
-
-    def setMemoryUtilization(self, memUtil):
-        self.memUtil = memUtil
+    def set_memory_utilization(self, mem_util: float):
+        self.mem_util = mem_util
         self.updateTimeStamp()
 
-    def _handleUpdateData(self, data):
+    def _handle_update_data(self, data):
         if data and isinstance(data, SystemPerformanceData):
-            self.cpuUtil = data.getCpuUtilization()
-            self.memUtil = data.getMemoryUtilization()
+            self.cpu_util = data.get_cpu_utilization()
+            self.mem_util = data.get_memory_utilization()
 

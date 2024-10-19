@@ -1,12 +1,3 @@
-#####
-# 
-# This class is part of the Programming the Internet of Things project.
-# 
-# It is provided as a simple shell to guide the student and assist with
-# implementation for the Programming the Internet of Things exercises,
-# and designed to be modified by the student as needed.
-#
-
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 import programmingtheiot.common.ConfigConst as ConfigConst
@@ -18,7 +9,7 @@ from programmingtheiot.data.SystemPerformanceData import SystemPerformanceData
 
 class SystemPerformanceManager(object):
     """
-    Shell representation of class for student implementation.
+    SystemPerformanceManager collects and manages system performance data.
     """
 
     def __init__(self):
@@ -38,7 +29,7 @@ class SystemPerformanceManager(object):
             defaultVal=ConfigConst.NOT_SET
         )
         
-        # Check if pollRate is valid
+        # Validate pollRate
         if self.pollRate <= 0:
             self.pollRate = ConfigConst.DEFAULT_POLL_CYCLES
         
@@ -55,10 +46,25 @@ class SystemPerformanceManager(object):
         
         logging.debug('CPU utilization is %s percent, and memory utilization is %s percent.', 
                       str(cpuUtilPct), str(memUtilPct))
+        
+        # Create an instance of SystemPerformanceData and set the values
+        sysPerfData = SystemPerformanceData()
+        sysPerfData.setLocationID(self.locationID)
+        sysPerfData.set_cpu_utilization(cpuUtilPct)  # Updated method name
+        sysPerfData.set_memory_utilization(memUtilPct)  # Updated method name
+
+        # Invoke the callback method if a listener is set
+        if self.dataMsgListener:
+            self.dataMsgListener.handleSystemPerformanceMessage(data=sysPerfData)
 
     def setDataMessageListener(self, listener: IDataMessageListener) -> bool:
-        self.dataMsgListener = listener
-        return True  # You may want to implement further logic here
+        if listener:
+            self.dataMsgListener = listener
+            logging.info("Data message listener set.")
+            return True
+        else:
+            logging.warning("Attempted to set a None listener.")
+            return False
 
     def startManager(self):
         logging.info("Starting SystemPerformanceManager.")
@@ -75,3 +81,4 @@ class SystemPerformanceManager(object):
             logging.info("SystemPerformanceManager stopped.")
         except Exception as e:
             logging.warning("Error stopping SystemPerformanceManager scheduler: %s", str(e))
+

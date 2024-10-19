@@ -77,3 +77,4 @@ streamFps           =   30
 imageFileExt        = .png
 videoFileExt        = .avi
 minMotionPixelsDiff = 10000
+

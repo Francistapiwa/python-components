@@ -1,15 +1,6 @@
-#####
-# 
-# This class is part of the Programming the Internet of Things project.
-# 
-# It is provided as a simple shell to guide the student and assist with
-# implementation for the Programming the Internet of Things exercises,
-# and designed to be modified by the student as needed.
-#
-
 import logging
-from importlib import import_module
 from apscheduler.schedulers.background import BackgroundScheduler
+from importlib import import_module
 import programmingtheiot.common.ConfigConst as ConfigConst
 from programmingtheiot.common.ConfigUtil import ConfigUtil
 from programmingtheiot.common.IDataMessageListener import IDataMessageListener
@@ -26,6 +17,7 @@ class SensorAdapterManager(object):
     def __init__(self):
         self.configUtil = ConfigUtil()
 
+        # Retrieve configuration values
         self.pollRate = self.configUtil.getInteger(
             section=ConfigConst.CONSTRAINED_DEVICE,
             key=ConfigConst.POLL_CYCLES_KEY,
@@ -64,13 +56,14 @@ class SensorAdapterManager(object):
 
         # Initialize environmental sensor tasks
         self._initEnvironmentalSensorTasks()
-        
+
         if self.useEmulator:
             logging.info("Using emulator for sensor data")
         else:
-            logging.info("Not using emulator for sensor data")
+            logging.info("Using simulators for sensor data")
 
     def _initEnvironmentalSensorTasks(self):
+        # Retrieve environmental thresholds
         humidityFloor = self.configUtil.getFloat(
             section=ConfigConst.CONSTRAINED_DEVICE,
             key=ConfigConst.HUMIDITY_SIM_FLOOR_KEY,
@@ -103,6 +96,7 @@ class SensorAdapterManager(object):
         )
 
         if not self.useEmulator:
+            # Initialize data generator and sensor adapters if not using emulator
             self.dataGenerator = SensorDataGenerator()
             humidityData = self.dataGenerator.generateDailyEnvironmentHumidityDataSet(
                 minValue=humidityFloor, maxValue=humidityCeiling, useSeconds=False
@@ -117,6 +111,23 @@ class SensorAdapterManager(object):
             self.humidityAdapter = HumiditySensorSimTask(dataSet=humidityData)
             self.pressureAdapter = PressureSensorSimTask(dataSet=pressureData)
             self.tempAdapter = TemperatureSensorSimTask(dataSet=tempData)
+        else:
+            # Dynamically load emulator tasks
+            logging.info("Loading emulator tasks...")
+            try:
+                heModule = import_module('programmingtheiot.cda.emulated.HumiditySensorEmulatorTask')
+                heClazz = getattr(heModule, 'HumiditySensorEmulatorTask')
+                self.humidityAdapter = heClazz()
+
+                peModule = import_module('programmingtheiot.cda.emulated.PressureSensorEmulatorTask')
+                peClazz = getattr(peModule, 'PressureSensorEmulatorTask')
+                self.pressureAdapter = peClazz()
+
+                teModule = import_module('programmingtheiot.cda.emulated.TemperatureSensorEmulatorTask')
+                teClazz = getattr(teModule, 'TemperatureSensorEmulatorTask')
+                self.tempAdapter = teClazz()
+            except ImportError as e:
+                logging.error(f"Error loading emulator tasks: {e}")
 
     def handleTelemetry(self):
         if self.humidityAdapter and self.pressureAdapter and self.tempAdapter:
@@ -124,6 +135,7 @@ class SensorAdapterManager(object):
             pressureData = self.pressureAdapter.generateTelemetry()
             tempData = self.tempAdapter.generateTelemetry()
 
+            # Set the location ID for all data
             humidityData.setLocationID(self.locationID)
             pressureData.setLocationID(self.locationID)
             tempData.setLocationID(self.locationID)
@@ -132,6 +144,7 @@ class SensorAdapterManager(object):
             logging.debug('Generated pressure data: ' + str(pressureData))
             logging.debug('Generated temp data: ' + str(tempData))
 
+            # Send data to the message listener
             if self.dataMsgListener:
                 self.dataMsgListener.handleSensorMessage(humidityData)
                 self.dataMsgListener.handleSensorMessage(pressureData)

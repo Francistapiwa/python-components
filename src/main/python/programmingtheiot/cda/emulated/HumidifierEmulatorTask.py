@@ -6,30 +6,29 @@
 # implementation for the Programming the Internet of Things exercises,
 # and designed to be modified by the student as needed.
 #
-
 import logging
-
-from time import sleep
-
+from programmingtheiot.data.SensorData import SensorData
+from programmingtheiot.cda.sim.BaseSensorSimTask import BaseSensorSimTask
 import programmingtheiot.common.ConfigConst as ConfigConst
 
-from programmingtheiot.common.ConfigUtil import ConfigUtil
-from programmingtheiot.cda.sim.BaseActuatorSimTask import BaseActuatorSimTask
+class HumiditySensorEmulatorTask(BaseSensorSimTask):
+    def __init__(self):
+        super(HumiditySensorEmulatorTask, self).__init__(
+            name=ConfigConst.HUMIDITY_SENSOR_NAME,
+            typeID=ConfigConst.HUMIDITY_SENSOR_TYPE
+        )
 
-from pisense import SenseHAT
+    def generateTelemetry(self):
+        sensorData = SensorData()
+        try:
+            sensorVal = self.get_humidity()  # Replace with your method to get humidity
+            sensorData.set_value(sensorVal)  # Use set_value instead of setValue
+            sensorData.setTypeID(ConfigConst.HUMIDITY_SENSOR_TYPE)
+        except Exception as e:
+            logging.error(f"Error retrieving humidity: {e}")
+            sensorData.set_value(0)  # Use set_value here as well
 
-class HumidifierEmulatorTask(BaseActuatorSimTask):
-	"""
-	Shell representation of class for student implementation.
-	
-	"""
+        return sensorData
 
-	def __init__(self):
-		pass
-
-	def _activateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
-		pass
-
-	def _deactivateActuator(self, val: float = ConfigConst.DEFAULT_VAL, stateData: str = None) -> int:
-		pass
-	
+    def get_humidity(self):
+        return 50.0  # Replace with actual logic to get humidity
